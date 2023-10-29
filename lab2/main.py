@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
 
     train(model, optimizer, loss, 
-            X_train, y_train, X_val, y_val,
-            device, dtype_float=torch.float16, n_epoch=10)
+        X_train, y_train, X_val, y_val,
+        device, dtype_float=torch.float32, n_epoch=2)
 
-    # eval()
+    eval(model, X_test, y_test, device, dtype_float=torch.float16)

@@ -12,26 +12,27 @@ torch.cuda.manual_seed(0)
 torch.backends.cudnn.deterministic = True
 
 def eval(
-    model, loss, X_test, y_test, 
+    model, X_test, y_test, 
     device, batch_size=100, 
-    dtype_float=torch.float16
+    dtype_float=torch.float32
 ):
-
-    X_test = X_test.to(device)
-    y_test = y_test.to(device)
-
-    scaler = torch.cuda.GradScaler()
-
     t1 = time.time()
 
-    with torch.cuda.amp.autocast(device_type=device, dtype=dtype_float):
-        preds = model(X_test)
+    counter = 0
+    accuracy = 0
+    for batch in range(0, len(y_test), batch_size):
+        X_val_batch = X_test[batch:batch+batch_size].to(device)
+        y_val_batch = y_test[batch:batch+batch_size].to(device)
 
-    accuracy = (preds.argmax(dim=1) == y_test).float().mean().data.cpu()
-    print('Test accuracy = ', accuracy)
+        with torch.autocast(device_type='cuda', dtype=dtype_float):
+            test_preds = model(X_val_batch)
 
+        accuracy += (test_preds.argmax(dim=1) == y_val_batch.argmax(dim=1)).float().mean().data.cpu()
+        counter += 1
+    
     t2 = time.time()
 
+    print('Test accuracy = ', accuracy / counter)
     print('Total eval time = ', t2 - t1)
     
     return model

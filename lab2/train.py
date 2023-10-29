@@ -14,15 +14,16 @@ torch.backends.cudnn.deterministic = True
 def train(
     model, optim, loss, X_train, y_train, 
     X_val, y_val, device, n_epoch=100, batch_size=100, 
-    model_name='model', dtype_float=torch.float16
+    model_name='model', dtype_float=torch.float32
 ):
     save_dir = './output/'
+    filepath = save_dir + model_name
 
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
 
-    X_val = X_val.to(device)
-    y_val = y_val.to(device)
+    # X_val = X_val.to(device)
+    # y_val = y_val.to(device)
 
     scaler = torch.cuda.amp.GradScaler()
 
@@ -50,8 +51,8 @@ def train(
             counter = 0
             accuracy = 0
             for batch in range(0, len(y_val), batch_size):
-                X_val_batch = X_val[batch:batch+batch_size]
-                y_val_batch = y_val[batch:batch+batch_size]
+                X_val_batch = X_val[batch:batch+batch_size].to(device)
+                y_val_batch = y_val[batch:batch+batch_size].to(device)
 
                 with torch.autocast(device_type='cuda', dtype=dtype_float):
                     val_preds = model(X_val_batch)
@@ -63,5 +64,7 @@ def train(
     t2 = time.time()
 
     print('Total train time = ', t2 - t1)
+
+    torch.save(model.state_dict(), filepath)
     
     return model
